@@ -9,6 +9,6 @@ namespace TaskBoardAPI.Repositories
         Task<IEnumerable<TasksList>> GetAllLists();
         Task<TasksList> GetListById(int id);
         Task<TasksList> AddList(TasksList list);  
-        Task DeleteList(int id);
+        Task DeleteList(TasksList list);
     }
 }

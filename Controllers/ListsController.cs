@@ -1,56 +1,10 @@
-//using Microsoft.AspNetCore.Mvc;
-//using System.Threading.Tasks;
-//using TaskBoardAPI.Services;
-//using TaskBoardAPI.Models;
 
-//namespace TaskBoardAPI.Controllers
-//{
-//	[ApiController]
-//	[Route("api/[controller]")]
-//	public class ListsController : ControllerBase
-//	{
-//		private readonly ListService _listService;
-
-//		public ListsController(ListService listService)
-//		{
-//			_listService = listService;
-//		}
-
-//		[HttpGet]
-//		public async Task<IActionResult> GetLists()
-//		{
-//			var lists = await _listService.GetAllLists();
-//			return Ok(lists);
-//		}
-
-//		[HttpGet("{id}")]
-//		public async Task<IActionResult> GetList(int id)
-//		{
-//			var list = await _listService.GetListById(id);
-//			if (list == null) return NotFound();
-//			return Ok(list);
-//		}
-
-//		[HttpPost]
-//		public async Task<IActionResult> CreateList(TasksList list)
-//		{
-//			var newList = await _listService.AddList(list);
-//			return CreatedAtAction(nameof(GetList), new { id = newList.Id }, newList);
-//		}
-
-//		[HttpDelete("{id}")]
-//		public async Task<IActionResult> DeleteList(int id)
-//		{
-//			await _listService.DeleteList(id);
-//			return NoContent();
-//		}
-//	}
-//}
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskBoardAPI.Data;
 using TaskBoardAPI.DTOs;
 using TaskBoardAPI.Models;
+using TaskBoardAPI.Services;
 
 namespace TaskBoardAPI.Controllers
 {
@@ -58,69 +12,36 @@ namespace TaskBoardAPI.Controllers
     [Route("lists")]
     public class ListsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IListService _listService;
 
-        public ListsController(AppDbContext context)
+        public ListsController(IListService listService)
         {
-            _context = context;
+            _listService = listService;
         }
 
         // GET /lists
         [HttpGet]
         public async Task<ActionResult<List<TasksListDto>>> GetLists()
         {
-            var lists = await _context.TasksList
-                .Include(l => l.Tasks)
-                .ToListAsync();
-
-            var listsDto = lists.Select(l => new TasksListDto
-            {
-                Id = l.Id,
-                Title = l.Title,
-                Tasks = l.Tasks?.Select(t => new TaskItemDto
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    Description = t.Description,
-                    DueDate = t.DueDate,
-                    Status = t.Status
-                }).ToList() ?? new List<TaskItemDto>()
-            }).ToList();
-
-            return Ok(listsDto);
+            var lists = await _listService.GetAllListsAsync();
+            return Ok(lists);
         }
 
         // POST /lists
         [HttpPost]
         public async Task<ActionResult<TasksListDto>> CreateList([FromBody] TasksListDto newList)
         {
-            var entity = new TasksList
-            {
-                Title = newList.Title
-            };
-            _context.TasksList.Add(entity);
-            await _context.SaveChangesAsync();
-
-            newList.Id = entity.Id;
-            return CreatedAtAction(nameof(GetLists), new { id = entity.Id }, newList);
+            var created = await _listService.AddListAsync(newList);
+            return CreatedAtAction(nameof(GetLists), new { id = created!.Id }, created);
         }
 
         // DELETE /lists/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteList(int id)
         {
-            var list = await _context.TasksList
-                .Include(l => l.Tasks)
-                .FirstOrDefaultAsync(l => l.Id == id);
-
-            if (list == null) return NotFound();
-
-            // Delete all tasks in the list first
-            if (list.Tasks != null) _context.Tasks.RemoveRange(list.Tasks);
-
-            _context.TasksList.Remove(list);
-            await _context.SaveChangesAsync();
-
+           
+            var deleted = await _listService.DeleteListAsync(id);
+            if (!deleted) return NotFound();
             return NoContent();
         }
     }

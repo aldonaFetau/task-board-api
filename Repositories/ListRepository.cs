@@ -27,14 +27,17 @@ namespace TaskBoardAPI.Repositories
             return list;
         }
 
-        public async Task DeleteList(int id)
+        public async Task DeleteList(TasksList list)
         {
-            var list = await _context.TasksList.FindAsync(id);
+  
             if (list != null)
             {
+               
+                if (list.Tasks != null) _context.Tasks.RemoveRange(list.Tasks);
                 _context.TasksList.Remove(list);
                 await _context.SaveChangesAsync();
             }
         }
+      
     }
 }

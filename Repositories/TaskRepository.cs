@@ -15,11 +15,18 @@ namespace TaskBoardAPI.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<TaskItem>> GetTasksByListId(int listId)
+
+        public async Task<IEnumerable<TaskItem>> GetTasksByListId(int listId, string? title)
         {
-            return await _context.Tasks
-                                 .Where(t => t.ListId == listId)
-                                 .ToListAsync();
+            var query = _context.Tasks.AsQueryable();
+
+            if (listId > 0)
+                query = query.Where(t => t.ListId == listId);
+
+            if (!string.IsNullOrWhiteSpace(title))
+                query = query.Where(t => t.Title.Contains(title));
+
+            return await query.ToListAsync();
         }
 
         public async Task<TaskItem> GetTaskById(int id)
@@ -41,9 +48,8 @@ namespace TaskBoardAPI.Repositories
             return task;
         }
 
-        public async Task DeleteTask(int id)
+        public async Task DeleteTask(TaskItem task)
         {
-            var task = await _context.Tasks.FindAsync(id);
             if (task != null)
             {
                 _context.Tasks.Remove(task);
@@ -52,3 +58,4 @@ namespace TaskBoardAPI.Repositories
         }
     }
 }
+

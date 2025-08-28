@@ -19,7 +19,7 @@ namespace TaskBoardAPI.Models
         [ForeignKey("TasksList")]
         public int ListId { get; set; }
 
-        [JsonIgnore] // <- prevent circular serialization
+        [JsonIgnore] //prevent circular serialization
         public TasksList? TasksList { get; set; }
 
     }

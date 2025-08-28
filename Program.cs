@@ -12,14 +12,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Register database context
-builder.Services.AddDbContext<AppDbContext>(options =>
+    builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register custom services and repositories
 builder.Services.AddScoped<IListRepository, ListRepository>();
+builder.Services.AddScoped<IListService, ListService>();
 builder.Services.AddScoped<ListService>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 // Enable CORS for frontend dev
 builder.Services.AddCors(options =>
